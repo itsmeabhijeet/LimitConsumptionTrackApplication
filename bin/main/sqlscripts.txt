@@ -1,0 +1,52 @@
+CREATE TABLE transactiontype (
+    ID int NOT NULL AUTO_INCREMENT,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (ID)
+);
+
+CREATE TABLE accountnumber (
+    ID int NOT NULL AUTO_INCREMENT,
+    name varchar(255) NOT NULL,
+    PRIMARY KEY (ID)
+);
+
+CREATE TABLE frequency (
+    ID int NOT NULL AUTO_INCREMENT,
+    type varchar(255) NOT NULL,
+    PRIMARY KEY (ID)
+);
+
+CREATE TABLE limitdefinition (
+    ID int NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (ID),
+	frequency_id int,
+	accountnumber_id int,
+	transactiontype_id int,
+    FOREIGN KEY (frequency_id) REFERENCES frequency(ID),
+	FOREIGN KEY (accountnumber_id) REFERENCES accountnumber(ID),
+	FOREIGN KEY (transactiontype_id) REFERENCES transactiontype(ID),
+	amount numeric
+);
+
+// Insert values
+INSERT INTO transactiontype (name) VALUES ('RECHARGE');
+INSERT INTO transactiontype (name) VALUES ('TOPUP');
+
+INSERT INTO accountnumber (name) VALUES ('A');
+INSERT INTO accountnumber (name) VALUES ('B');
+
+INSERT INTO frequency (type) VALUES ('DAILY');
+INSERT INTO frequency (type) VALUES ('MONTHLY');
+
+
+// For account A
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (1,1,2,5000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (1,1,1,1000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (2,1,2,10000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (2,1,1,8000);
+
+// For account B
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (1,2,2,5000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (1,2,1,1000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (2,2,2,10000);
+INSERT INTO limitdefinition (frequency_id,accountnumber_id,transactiontype_id,amount) VALUES (2,2,1,8000);
