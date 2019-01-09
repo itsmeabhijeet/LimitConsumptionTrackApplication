@@ -3,16 +3,14 @@
  */
 package com.example.demo.service;
 
+import javax.sql.DataSource;
 import javax.transaction.Transactional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 
 import com.example.demo.models.Transaction;
 
@@ -34,44 +32,40 @@ public class DBService {
 
 	private JdbcTemplate jdbcTemplateObject;
 
-	/*
-	 * @Autowired LimitRepository limitRepository;
-	 */
-
 	@Bean
-	public DBService dbService() {
-		DBService dbService = new DBService();
-		System.out.println("*******" + driverClassName + url + username + password);
-//		DataSource dataSource = DataSourceBuilder.create().username(username).password(password).url(url)
-//				.driverClassName(driverClassName).build();
+	public DataSource dbService() {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(driverClassName);
 		dataSource.setUrl(url);
 		dataSource.setUsername(username);
 		dataSource.setPassword(password);
-
 		this.jdbcTemplateObject = new JdbcTemplate(dataSource);
-		return dbService;
+		return dataSource;
 	}
 
-	// public DataSource getDataSource() {
-	// DataSource dataSource =
-	// DataSourceBuilder.create().username(username).password(password).url(url)
-	// .driverClassName(driverClassName).build();
-	// this.jdbcTemplateObject = new JdbcTemplate(dataSource);
-	// return dataSource;
-	// }
+	@Transactional
+	public int updateLimitValues(Transaction transaction) {
+		int res = 0;
+		String fetchLimitQuery = "select amount from limitdefinition"
+				+ " where accountnumber_id =(select id from accountnumber where name ='"
+				+ transaction.getAccountNumber() + "'" + ")"
+				+ " and transactiontype_id= (select id from transactiontype where name='" + transaction.getType() + "'"
+				+ ")" + "and frequency_id = (select id from frequency where type ='Daily')";
 
-	public synchronized double fetchLimit(Transaction transaction) {
-		return 0;
-	}
+		String updateLimitQuery = "update limitdefinition set amount = ?"
+				+ " where accountnumber_id =(select id from accountnumber where name ='"
+				+ transaction.getAccountNumber() + "'" + ")"
+				+ " and transactiontype_id= (select id from transactiontype where name='" + transaction.getType() + "'"
+				+ ")" + "and frequency_id = (select id from frequency where type ='Daily')";
 
-	
-	public int update(Integer id, String name) {
-		String SQL = "update accountnumber set name = ? where id = ?";
-		int update = jdbcTemplateObject.update(SQL, name, id);
-		System.out.println("Updated Record with ID = " + id + " " + update);
-		return update;
+		double limit = jdbcTemplateObject.queryForObject(fetchLimitQuery, Double.class);
+		if (limit > transaction.getTransactionAmount()) {
+			double updatedLimit = limit - transaction.getTransactionAmount();
+			res = jdbcTemplateObject.update(updateLimitQuery,updatedLimit);
+		} else
+			return -1;
+
+		return res;
 	}
 
 }

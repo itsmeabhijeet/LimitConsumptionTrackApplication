@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.models.Transaction;
 import com.example.demo.service.DBService;
-import com.example.demo.service.LimitRepository;
 
 /**
  * @author Abhijeet Gupta
@@ -27,22 +26,17 @@ public class LimitConsumptionController {
 
 	@Autowired
 	DBService dbService;
-	
-//	@Autowired
-//	LimitRepository noteRepository;
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@RequestMapping("/transactions")
-	public ResponseEntity<HttpStatus> doLimitConsumptionCheck(@RequestBody Transaction transaction) {
-		ResponseEntity<HttpStatus> responseEntity = null;
-		// validate the request
-		int res = dbService.update(1, "AAA");
-		System.out.println(res);
-		if (res >= 0)
-			responseEntity = new ResponseEntity<HttpStatus>(HttpStatus.OK);
+	public ResponseEntity<String> doLimitConsumptionCheck(@RequestBody Transaction transaction) {
+		ResponseEntity<String> responseEntity = null;
+		int res = dbService.updateLimitValues(transaction);
+		if (res == 1)
+			responseEntity = new ResponseEntity<>("Transaction Success", HttpStatus.OK);
 		else
-			responseEntity = new ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST);
+			responseEntity = new ResponseEntity<>("Transaction Failed as limit is over", HttpStatus.BAD_REQUEST);
 		return responseEntity;
 
 	}
