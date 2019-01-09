@@ -28,8 +28,8 @@ public class LimitConsumptionController {
 	@Autowired
 	DBService dbService;
 	
-	@Autowired
-	LimitRepository noteRepository;
+//	@Autowired
+//	LimitRepository noteRepository;
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)

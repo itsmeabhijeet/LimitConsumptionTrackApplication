@@ -3,11 +3,16 @@
  */
 package com.example.demo.service;
 
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import com.example.demo.models.Transaction;
 
@@ -19,26 +24,34 @@ import com.example.demo.models.Transaction;
 public class DBService {
 
 	@Value("${app.datasource.driverClassName}")
-	String driverClassName;
+	private String driverClassName;
 	@Value("${app.datasource.url}")
-	String url;
+	private String url;
 	@Value("${app.datasource.username}")
-	String username;
+	private String username;
 	@Value("${app.datasource.password}")
-	String password;
+	private String password;
 
 	private JdbcTemplate jdbcTemplateObject;
 
-	public DBService() {
+	/*
+	 * @Autowired LimitRepository limitRepository;
+	 */
+
+	@Bean
+	public DBService dbService() {
+		DBService dbService = new DBService();
+		System.out.println("*******" + driverClassName + url + username + password);
 //		DataSource dataSource = DataSourceBuilder.create().username(username).password(password).url(url)
 //				.driverClassName(driverClassName).build();
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
-	    dataSource.setDriverClassName(driverClassName);
-	    dataSource.setUrl(url);
-	    dataSource.setUsername(username);
-	    dataSource.setPassword(password);
+		dataSource.setDriverClassName(driverClassName);
+		dataSource.setUrl(url);
+		dataSource.setUsername(username);
+		dataSource.setPassword(password);
 
 		this.jdbcTemplateObject = new JdbcTemplate(dataSource);
+		return dbService;
 	}
 
 	// public DataSource getDataSource() {
@@ -53,6 +66,7 @@ public class DBService {
 		return 0;
 	}
 
+	
 	public int update(Integer id, String name) {
 		String SQL = "update accountnumber set name = ? where id = ?";
 		int update = jdbcTemplateObject.update(SQL, name, id);
