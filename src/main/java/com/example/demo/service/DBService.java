@@ -47,7 +47,7 @@ public class DBService {
 	@Transactional(rollbackOn = DataAccessException.class)
 	public int updateLimitValues(Transaction transaction) {
 		int res = 0;
-		String fetchLimitQuery = "select amount from limitdefinition"
+		String fetchDailyLimitQuery = "select amount from limitdefinition"
 				+ " where accountnumber_id =(select id from accountnumber where name ='"
 				+ transaction.getAccountNumber() + "'" + ")"
 				+ " and transactiontype_id= (select id from transactiontype where name='" + transaction.getType() + "'"
@@ -57,15 +57,36 @@ public class DBService {
 				+ " where accountnumber_id =(select id from accountnumber where name ='"
 				+ transaction.getAccountNumber() + "'" + ")"
 				+ " and transactiontype_id= (select id from transactiontype where name='" + transaction.getType() + "'"
-				+ ")" + "and frequency_id = (select id from frequency where type ='Daily')";
+				+ ")" + "and frequency_id = (select id from frequency where type =?)";
 
-		double limit = jdbcTemplateObject.queryForObject(fetchLimitQuery, Double.class);
-		if (limit > transaction.getTransactionAmount()) {
-			double updatedLimit = limit - transaction.getTransactionAmount();
-			res = jdbcTemplateObject.update(updateLimitQuery, updatedLimit);
-		} else
-			return -1;
+		double dailyLimit = jdbcTemplateObject.queryForObject(fetchDailyLimitQuery, Double.class);
+		if (dailyLimit > transaction.getTransactionAmount()) {
+			double updatedLimit = dailyLimit - transaction.getTransactionAmount();
+			String frequency = "Daily";
+			res = jdbcTemplateObject.update(updateLimitQuery, updatedLimit, frequency);
+			if (res == 1) {
+				res = onSuccessUpdateMonthlyLimitValues(transaction, updateLimitQuery);
+			}
+		} else {
+			res = -1;
+		}
+		return res;
+	}
 
+	private int onSuccessUpdateMonthlyLimitValues(Transaction transaction, String updateLimitQuery) {
+		int res = -1;
+		String fetchMonthlyLimitQuery = "select amount from limitdefinition"
+				+ " where accountnumber_id =(select id from accountnumber where name ='"
+				+ transaction.getAccountNumber() + "'" + ")"
+				+ " and transactiontype_id= (select id from transactiontype where name='" + transaction.getType() + "'"
+				+ ")" + "and frequency_id = (select id from frequency where type ='Monthly')";
+
+		double monthlyLimit = jdbcTemplateObject.queryForObject(fetchMonthlyLimitQuery, Double.class);
+		if (monthlyLimit > transaction.getTransactionAmount()) {
+			double updatedLimit = monthlyLimit - transaction.getTransactionAmount();
+			String frequency = "Monthly";
+			res = jdbcTemplateObject.update(updateLimitQuery, updatedLimit, frequency);
+		}
 		return res;
 	}
 
