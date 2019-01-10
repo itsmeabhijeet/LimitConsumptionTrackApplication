@@ -1,3 +1,7 @@
+create database limitdb;
+
+use limitdb;
+
 CREATE TABLE transactiontype (
     ID int NOT NULL AUTO_INCREMENT,
     name varchar(255) NOT NULL,
