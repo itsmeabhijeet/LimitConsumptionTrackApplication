@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ public class DBService {
 		return dataSource;
 	}
 
-	@Transactional
+	@Transactional(rollbackOn = DataAccessException.class)
 	public int updateLimitValues(Transaction transaction) {
 		int res = 0;
 		String fetchLimitQuery = "select amount from limitdefinition"
@@ -61,7 +62,7 @@ public class DBService {
 		double limit = jdbcTemplateObject.queryForObject(fetchLimitQuery, Double.class);
 		if (limit > transaction.getTransactionAmount()) {
 			double updatedLimit = limit - transaction.getTransactionAmount();
-			res = jdbcTemplateObject.update(updateLimitQuery,updatedLimit);
+			res = jdbcTemplateObject.update(updateLimitQuery, updatedLimit);
 		} else
 			return -1;
 
